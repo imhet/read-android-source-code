@@ -4,9 +4,9 @@
 
 LRU是最近最少使用（Least Recently Used)缓存算法。它需要跟踪用户使用缓存的时间和次数，当缓存满时，它会丢弃掉最近最少使用的元素。
 
-在Android3.1版本中引入了LruCache，如果需要兼容之前版本可以使用Support库中的同名类，也可以把Support库中该类拷贝出来放到自己代码中使用。
+在Android3.1版本中引入了[LruCache](http://developer.android.com/intl/zh-cn/reference/android/util/LruCache.html)，如果需要兼容之前版本可以使用Support库中的同名类，也可以把Support库中该类拷贝出来放到自己代码中使用。
 
-LruCache实现缓存的一种数据结构，内部调用LinkedHashMap实现的LRU算法，还定义了7个记录缓存状态和操作次数的成员变量，对外提供缓存增删查改等方法，并抽象出了3个方法供子类扩展。
+LruCache是实现缓存的一种数据结构，内部调用`LinkedHashMap`实现的LRU算法，还定义了7个记录缓存状态和操作次数的成员变量，对外提供缓存增删查改等方法，并抽象出了3个方法供子类扩展。
 
 
 ## 源码
@@ -141,12 +141,11 @@ public final V get(K key) {
 
 /**
  * 缺省情况下该方法返回值为null,除非用户重写了这个方法使得在缓存未被命中为对应的key提供了一个非空value.
- * <p/>
- * <p/>
+ *
  * 该方法没有同步:其它线程同时操作缓存时肯呢过会导致脏数据.
- * <p/>
- * <p/>
+ *
  * 如果该方法返回生成的value时map中已经有了对应的key和value,这个生成的value将会被丢弃并且在用户重写的entryRemoved方法中释放掉.这种情况
+ *
  * 一般发生在多个线程在同一时间调用create生成同一个key对应的缓存值(会造成多个value被创建),也可能发生在一个线程调用put方法而另外一个线
  * 程正在为相同的key创建一个value.
  */
@@ -241,14 +240,14 @@ protected void entryRemoved(boolean evicted, K key, V oldValue, V newValue) {
 
 `remove`方法会移除指定key对应的缓存值。
 
-`trimeToSize`方法将会使缓存维持在指定大小。如果当前缓存大小不大于指定大小则直接退出；否则移除最近最少使用的值，同时更新当前缓存大小和回收次数直到当前缓存大小不大于指定大小 ；每次移除都会调用` entryRemoved`方法 。
+`trimeToSize`方法将会使缓存维持在指定大小。如果当前缓存大小不大于指定大小则直接退出；否则移除最近最少使用的缓存对象，同时更新当前缓存大小和回收次数直到当前缓存大小不大于指定大小 ；每次移除都会调用` entryRemoved`方法 。
 
 
 ### 调整缓存大小
 
 使用`resize`可以调整缓存最大值，实际上也是调用`trimToSize`。
 
-用户如果需要自己定义缓存大小单位，需要重写`sizeOf`方法，并确保对每个缓存对象它的缓存大小在缓存请假不会改变。
+用户如果需要自己定义缓存大小单位，需要重写`sizeOf`方法，并确保对缓存对象的大小在缓存期间不会改变。
 
 ```
 /**
@@ -293,24 +292,18 @@ protected int sizeOf(K key, V value) {
 ```
 
 
-为了方便理解，提供了中文注释版本的LruCache类。
+为了方便理解，提供了中文注释版本的[LruCache类](LruCache.java)。
 
 
 ## 总结 
 
 从上面源码中我们可以总结如下：
 
-- LruCache是对缓存对象维持着强引用的缓存。每次缓存被命中时，它会被移到队列头部；缓存已满情况下，添加新元素将会导致队列尾部的元素从缓存中释放出来从而可能被GC回收。
-- LruCache的LRU算法实际上是依靠LinkedHashMap来实现的。
-- LruCache是线程安全的。从源码中可以看出对外的方法执行过程中都使用了`synchronized`。
+- LruCache是一种缓存数据结构，它对缓存对象维持着强引用。每次缓存被命中时，缓存元素会被移到队列头部；缓存已满情况下，添加新元素将会导致队列尾部的元素从缓存中释放出来从而可能被GC回收。
+- LruCache的LRU算法实际上是依靠`LinkedHashMap`来实现的。
+- LruCache是线程安全的。从源码中可以看出它公开的方法执行过程中都使用了`synchronized`。
 - LruCache不允许使用空键或空值。调用`get`,`put`,`remove`返回空值意味着缓存中不存在相应的键。
 - 重写`create`、`sizeOf`、`entryRemoved`等方法可以定制符合你业务的LruCache。
-
-为了方便理解，提供了中文注释版本的[LruCache类]()。
-
-
-
-
 
 
 
